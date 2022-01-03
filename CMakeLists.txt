@@ -14,55 +14,17 @@ list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
 # endif()
 
 # include(${CMAKE_BINARY_DIR}/conan.cmake)
-include(CMakePrintHelpers)
+include(CMakePrintHelpers) # Add only for debugging
 
 include(conan.cmake)
 conan_add_remote(NAME conancenter URL https://center.conan.io)
 
 conan_cmake_configure(
     REQUIRES
-    fmt/6.1.2
-    boost/1.77.0
     protobuf/3.11.4
     BUILD_REQUIRES
     protobuf/3.11.4
     GENERATORS cmake_find_package
-    OPTIONS
-    boost:shared=False
-    boost:without_atomic=True
-    boost:without_chrono=True
-    boost:without_container=True
-    boost:without_context=True
-    boost:without_contract=True
-    boost:without_coroutine=True
-    boost:without_date_time=True
-    boost:without_exception=True
-    boost:without_fiber=True
-    boost:without_filesystem=True
-    boost:without_graph=True
-    boost:without_graph_parallel=True
-    boost:without_iostreams=True
-    boost:without_json=True
-    boost:without_locale=True
-    boost:without_log=True
-    boost:without_math=True
-    boost:without_mpi=True
-    boost:without_nowide=True
-    boost:without_program_options=False
-    boost:without_python=True
-    boost:without_random=True
-    boost:without_regex=True
-    boost:without_serialization=True
-    boost:without_stacktrace=True
-    boost:without_system=True
-    boost:without_test=True
-    boost:without_thread=True
-    boost:without_timer=True
-    boost:without_type_erasure=True
-    boost:without_wave=True
-
-    b2:use_cxx_env=False
-    #b2:toolset=clang
 )
 
 conan_cmake_autodetect(settings)
@@ -83,7 +45,6 @@ if(ANDROID)
     list(APPEND settings "arch=armv8") #"${ANDROID_SYSROOT_ABI}")
     list(APPEND settings "os=Android")
     list(APPEND settings "os.api_level=${ANDROID_PLATFORM_LEVEL}")
-    #list(APPEND tool_requires "protobuf/3.11.4")
 
     list(APPEND env_settings "CONAN_CMAKE_TOOLCHAIN_FILE=${CONAN_TOOLCHAIN_FILE}")
     #list(APPEND env_settings "PATH=${ANDROID_TOOLCHAIN_ROOT}/bin")
@@ -100,12 +61,6 @@ if(ANDROID)
     list(APPEND env_settings "LDFLAGS=--sysroot=${CMAKE_SYSROOT} --gcc-toolchain=${ANDROID_TOOLCHAIN_ROOT} ${CMAKE_SHARED_LINKER_FLAGS}") # --target=${CMAKE_C_COMPILER_TARGET}
     list(APPEND env_settings "LD=${ANDROID_TOOLCHAIN_PREFIX}ld")
     list(APPEND env_settings "STRIP=${ANDROID_TOOLCHAIN_PREFIX}strip")
-
-    #execute_process(COMMAND conan install protobuf/3.11.4@ --build-require --build missing COMMAND_ECHO STDOUT)
-else()
-   # set(CONAN_TOOLCHAIN_FILE "${CMAKE_BINARY_DIR}/ConanToolchainWrapper.cmake")
-   # file(WRITE "${CONAN_TOOLCHAIN_FILE}" "set\(CMAKE_C_COMPILER \"${CMAKE_C_COMPILER}\"\)\n"
-   #                                       "set\(CMAKE_CXX_COMPILER \"${CMAKE_CXX_COMPILER}\"\)\n")
 endif()
 
 conan_cmake_install(PATH_OR_REFERENCE .
@@ -116,17 +71,12 @@ conan_cmake_install(PATH_OR_REFERENCE .
                     PROFILE_BUILD default
                     )
 
-find_package(fmt REQUIRED)
-find_package(Boost 1.77 REQUIRED COMPONENTS program_options)
-
 find_package(Protobuf REQUIRED)
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS addressbook.proto)
 
 add_executable(main main.cpp ${PROTO_SRCS} ${PROTO_HDRS})
 target_include_directories(main PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
 target_link_libraries(main PUBLIC
-    fmt::fmt
-    Boost::program_options
     protobuf::libprotobuf
 )
 target_compile_features(main PUBLIC cxx_std_11)
