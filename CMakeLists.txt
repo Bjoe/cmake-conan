@@ -23,9 +23,6 @@ conan_cmake_configure(
     REQUIRES
     fmt/6.1.2
     boost/1.77.0
-    protobuf/3.11.4
-    BUILD_REQUIRES
-    protobuf/3.11.4
     GENERATORS cmake_find_package
     OPTIONS
     boost:shared=False
@@ -62,7 +59,6 @@ conan_cmake_configure(
     boost:without_wave=True
 
     b2:use_cxx_env=False
-    #b2:toolset=clang
 )
 
 conan_cmake_autodetect(settings)
@@ -75,15 +71,13 @@ if(ANDROID)
                                       "set\(ANDROID_ABI \"${ANDROID_ABI}\"\)\n"
                                       "set\(ANDROID_CPP_FEATURES \"${ANDROID_CPP_FEATURES}\"\)\n"
                                       "set(ANDROID_STL \"${ANDROID_STL}\"\)\n"
-                                      "include\(\"${CMAKE_TOOLCHAIN_FILE}\"\)\n"
-                                      "string(APPEND CMAKE_EXE_LINKER_FLAGS \" -llog\")\n") # Fix bug in protobuf build !
+                                      "include\(\"${CMAKE_TOOLCHAIN_FILE}\"\)\n")
 
 
     string(TOUPPER "${TYPE}" UPPER_TYPE)
     list(APPEND settings "arch=armv8") #"${ANDROID_SYSROOT_ABI}")
     list(APPEND settings "os=Android")
     list(APPEND settings "os.api_level=${ANDROID_PLATFORM_LEVEL}")
-    #list(APPEND tool_requires "protobuf/3.11.4")
 
     list(APPEND env_settings "CONAN_CMAKE_TOOLCHAIN_FILE=${CONAN_TOOLCHAIN_FILE}")
     #list(APPEND env_settings "PATH=${ANDROID_TOOLCHAIN_ROOT}/bin")
@@ -100,33 +94,21 @@ if(ANDROID)
     list(APPEND env_settings "LDFLAGS=--sysroot=${CMAKE_SYSROOT} --gcc-toolchain=${ANDROID_TOOLCHAIN_ROOT} ${CMAKE_SHARED_LINKER_FLAGS}") # --target=${CMAKE_C_COMPILER_TARGET}
     list(APPEND env_settings "LD=${ANDROID_TOOLCHAIN_PREFIX}ld")
     list(APPEND env_settings "STRIP=${ANDROID_TOOLCHAIN_PREFIX}strip")
-
-    #execute_process(COMMAND conan install protobuf/3.11.4@ --build-require --build missing COMMAND_ECHO STDOUT)
-else()
-   # set(CONAN_TOOLCHAIN_FILE "${CMAKE_BINARY_DIR}/ConanToolchainWrapper.cmake")
-   # file(WRITE "${CONAN_TOOLCHAIN_FILE}" "set\(CMAKE_C_COMPILER \"${CMAKE_C_COMPILER}\"\)\n"
-   #                                       "set\(CMAKE_CXX_COMPILER \"${CMAKE_CXX_COMPILER}\"\)\n")
 endif()
 
 conan_cmake_install(PATH_OR_REFERENCE .
                     BUILD missing
                     REMOTE conancenter
-                    SETTINGS_HOST ${settings}
-                    ENV_HOST ${env_settings}
-                    PROFILE_BUILD default
+                    SETTINGS ${settings}
+                    ENV ${env_settings}
                     )
 
 find_package(fmt REQUIRED)
 find_package(Boost 1.77 REQUIRED COMPONENTS program_options)
 
-find_package(Protobuf REQUIRED)
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS addressbook.proto)
-
-add_executable(main main.cpp ${PROTO_SRCS} ${PROTO_HDRS})
-target_include_directories(main PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
+add_executable(main main.cpp)
 target_link_libraries(main PUBLIC
     fmt::fmt
     Boost::program_options
-    protobuf::libprotobuf
 )
 target_compile_features(main PUBLIC cxx_std_11)

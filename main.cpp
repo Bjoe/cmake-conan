@@ -2,8 +2,6 @@
 #include <iostream>
 #include "fmt/color.h"
 
-#include "addressbook.pb.h"
-
 using namespace boost::program_options;
 
 void on_age(int age)
@@ -38,11 +36,4 @@ int main(int argc, const char *argv[])
     {
         std::cerr << ex.what() << '\n';
     }
-
-    tutorial::Person p;
-    p.set_id(21);
-    p.set_name("conan-center-index");
-    p.set_email("info@conan.io");
-
-    std::cout << p.SerializeAsString() << "\n";
 }
